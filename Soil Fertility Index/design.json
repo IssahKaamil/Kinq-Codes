@@ -1,0 +1,89 @@
+{
+    "designSystem": {
+      "style": "A whimsical, friendly, and clean aesthetic with a focus on rounded shapes, soft gradients, and a natural, inviting feel.",
+      "palette": {
+        "primary": {
+          "name": "Sky Blue",
+          "description": "Used for backgrounds, headers, and main interactive elements.",
+          "hex": "#87CEEB"
+        },
+        "secondary": {
+          "name": "Soft Green",
+          "description": "Used for foliage, accents, and complementary elements.",
+          "hex": "#90EE90"
+        },
+        "accent": {
+          "name": "Warm Orange",
+          "description": "Used for highlighting specific elements and calls-to-action.",
+          "hex": "#FFA500"
+        },
+        "neutrals": {
+          "name": "Subtle Grays",
+          "description": "Used for text, borders, and shadows.",
+          "light_gray": "#F5F5F5",
+          "dark_gray": "#333333"
+        }
+      },
+      "typography": {
+        "font_family": "A rounded, sans-serif font, similar to 'Inter' or 'Poppins'.",
+        "heading_1": {
+          "size": "Large and bold",
+          "weight": "Bold",
+          "color": "Dark Gray"
+        },
+        "heading_2": {
+          "size": "Medium-large",
+          "weight": "Semi-bold",
+          "color": "Dark Gray"
+        },
+        "body_text": {
+          "size": "Standard",
+          "weight": "Regular",
+          "color": "Dark Gray"
+        }
+      },
+      "layout": {
+        "spacing_scale": {
+          "small": "4px",
+          "medium": "8px",
+          "large": "16px",
+          "extra_large": "32px"
+        },
+        "element_separation": "Generous use of whitespace to create clear separation between components.",
+        "alignment": "Content is primarily centered within its container."
+      },
+      "components": [
+        {
+          "name": "Container Card",
+          "structure": "A rectangular shape with highly rounded corners, a subtle drop shadow, and a light background.",
+          "attributes": {
+            "border_radius": "Large (e.g., 20px)",
+            "shadow": "Soft, diffused drop shadow",
+            "background_color": "White or light gray"
+          }
+        },
+        {
+          "name": "Button",
+          "structure": "A pill-shaped button with rounded ends, a subtle shadow, and a smooth gradient.",
+          "attributes": {
+            "border_radius": "Full (e.g., 9999px)",
+            "shadow": "Subtle drop shadow",
+            "gradient": "Light gradient from top to bottom"
+          }
+        },
+        {
+          "name": "Input Field",
+          "structure": "A rectangular field with highly rounded corners and a very light border.",
+          "attributes": {
+            "border_radius": "Large (e.g., 10px)",
+            "border_color": "Very light gray"
+          }
+        }
+      ],
+      "visuals": {
+        "illustrations": "Vector-based, vibrant, and friendly with no harsh lines. They use solid colors and subtle gradients.",
+        "icons": "Simple, solid-filled, and minimal. Often contained within a circle or square."
+      }
+    }
+  }
+  

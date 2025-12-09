@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 FERTITRACK - Whimsical GIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sky-blue: #87CEEB;
+            --soft-green: #90EE90;
+            --warm-orange: #FFA500;
+            --light-gray: #F5F5F5;
+            --dark-gray: #333333;
+            --white: #FFFFFF;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+            --shadow-heavy: rgba(0, 0, 0, 0.25);
+        }
+
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f8fafc;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1),
+                0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            overflow: hidden;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .container-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #e2e8f0;
+            border-radius: 16px 16px 0 0;
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(0);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 400;
+            transition: all 0.3s ease;
+            background: #ffffff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .fertility-excellent {
+            background: #10b981;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .fertility-good {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .fertility-average {
+            background: #f59e0b;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .fertility-below-average {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .info-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .info-card h4 {
+            color: #1a1a1a;
+            font-weight: 700;
+            margin-bottom: 16px;
+            font-size: 18px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-card p {
+            color: #2d2d2d;
+            font-size: 15px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .custom-marker {
+            background: transparent;
+            border: none;
+            font-size: 20px;
+            text-align: center;
+            line-height: 20px;
+        }
+
+        .user-location-marker {
+            background: transparent;
+            border: none;
+            font-size: 25px;
+            text-align: center;
+            line-height: 25px;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .clicked-marker {
+            background: transparent;
+            border: none;
+            font-size: 30px;
+            text-align: center;
+            line-height: 30px;
+            filter: drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.4));
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .header-title {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a365d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        @keyframes titleGlow {
+            from {
+                filter: drop-shadow(0 0 5px rgba(135, 206, 235, 0.3));
+            }
+            to {
+                filter: drop-shadow(0 0 15px rgba(135, 206, 235, 0.6));
+            }
+        }
+
+        .section-title {
+            color: #1a1a1a;
+            font-weight: 700;
+            font-size: 24px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 16px;
+        }
+
+        .section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+
+        .legend-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e2e8f0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .legend-card:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        }
+
+        /* Enhanced animations */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeInScale 0.6s ease-out;
+        }
+
+        .animate-slide-left {
+            animation: slideInLeft 0.6s ease-out;
+        }
+
+        .animate-slide-right {
+            animation: slideInRight 0.6s ease-out;
+        }
+
+        /* Enhanced typography */
+        .text-gradient {
+            background: linear-gradient(135deg, #1a365d, #2d5a2d, #cc6600);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: drop-shadow(1px 1px 2px rgba(0, 0, 0, 0.3));
+        }
+
+        /* High contrast text colors */
+        .text-high-contrast {
+            color: #1a1a1a !important;
+            text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        }
+
+        .text-dark {
+            color: #2d2d2d !important;
+        }
+
+        .text-darker {
+            color: #1a1a1a !important;
+        }
+
+        /* Enhanced spacing and layout */
+        .enhanced-spacing {
+            margin: 32px 0;
+        }
+
+        .enhanced-padding {
+            padding: 32px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top bar with user and logout -->
+    <div class="w-full bg-white border-b border-gray-200">
+        <div class="max-w-8xl mx-auto px-8 py-3 flex items-center justify-between">
+            <div class="text-sm text-gray-600">
+                Logged in as <span class="font-semibold text-gray-900">{{ session.get('user_email') }}</span>
+            </div>
+            <form action="{{ url_for('logout') }}" method="GET">
+                <button type="submit" class="text-sm px-3 py-1.5 rounded bg-gray-800 text-white hover:bg-gray-700">Logout</button>
+            </form>
+        </div>
+    </div>
+    <div class="container mx-auto px-8 py-12 max-w-8xl">
+        <!-- Header -->
+        <div class="text-center mb-16 animate-fade-in">
+            <h1 class="text-5xl font-bold text-gray-900 mb-4">🌱 Ferti-Track</h1>
+            <p class="text-xl text-gray-600 font-medium mb-8">GIS-Integrated Machine Learning for Soil Health Assessment</p>
+            <div class="flex justify-center space-x-8 text-gray-600">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">🌍</span>
+                    <span class="font-medium">Global Coverage</span>
+                </div>
+               <!-- <div class="flex items-center space-x-2">
+                    <span class="text-xl">🤖</span>
+                    <span class="font-medium">AI-Powered</span>
+                </div>-->
+                <div class="flex items-center space-x-2">
+                    <span class="text-xl">📊</span>
+                    <span class="font-medium">Real-time Analysis</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            <!-- Left Column: Map and Location -->
+            <div class="space-y-10 animate-slide-left">
+                <!-- Map Container -->
+                <div class="container-card enhanced-padding">
+                    <h2 class="section-title">🌿 Vegetation Map & Soil Analysis</h2>
+                    <div id="map" class="map-container"></div>
+
+                    <!-- Map Legend -->
+                    <div class="legend-card mt-8">
+                        <h4 class="font-semibold text-darker mb-4 text-lg">🗺️ Map Legend</h4>
+                        <div class="grid grid-cols-1 gap-4 text-sm">
+                            <div class="flex items-center space-x-4 p-3 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300">
+                                <span class="text-3xl animate-bounce">🌱</span>
+                                <div>
+                                    <span class="font-semibold text-darker">Soil Data Points</span>
+                                    <p class="text-xs text-dark">Available soil samples</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4 p-3 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300">
+                                <span class="text-3xl animate-pulse">📍</span>
+                                <div>
+                                    <span class="font-semibold text-darker">Your Location</span>
+                                    <p class="text-xs text-dark">Current position</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4 p-3 bg-white rounded-xl border border-gray-100 hover:shadow-md transition-all duration-300">
+                                <span class="text-3xl">🎯</span>
+                                <div>
+                                    <span class="font-semibold text-darker">Clicked Location</span>
+                                    <p class="text-xs text-dark">Selected for analysis</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-sm text-blue-800 font-medium text-center">
+                                💡 <strong>Pro Tip:</strong> Click anywhere on the map or any 🌱 marker to analyze soil fertility at that location
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 space-y-6">
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <button id="getLocationBtn" class="btn-primary flex-1">
+                                📍 Get My Location
+                            </button>
+                            <button id="refreshLocationBtn" class="btn-secondary" style="display: none;">
+                                🔄 Refresh Location
+                            </button>
+                            <button id="resetLocationBtn" class="btn-secondary" style="display: none;">
+                                🔄 Reset
+                            </button>
+                        </div>
+                        <div class="info-card">
+                            <div class="flex items-center space-x-3 mb-4">
+                                <span class="text-2xl">📍</span>
+                                <h4 class="font-semibold text-darker text-lg">Location Status</h4>
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                    <span class="font-semibold text-blue-800">Current Location:</span>
+                                    <span id="currentLocation" class="text-blue-600 font-bold">Not set</span>
+                                </div>
+                                <div class="flex justify-between items-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                                    <span class="font-semibold text-gray-800">Coordinates:</span>
+                                    <span id="coordinates" class="text-gray-600 font-bold">Not set</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Soil Information -->
+                <div class="container-card enhanced-padding">
+                    <h2 class="section-title">🏞️ Soil Information</h2>
+                    <div id="soilInfo" class="space-y-6">
+                        <div class="info-card text-center">
+                            <div class="flex flex-col items-center space-y-4">
+                                <span class="text-6xl animate-bounce">🌱</span>
+                                <p class="text-dark text-lg font-medium">Click "Get My Location", click anywhere on the map, or click any 🌱 marker to see soil information</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Soil Types in Area -->
+                    <div class="legend-card mt-8">
+                        <h4 class="font-semibold text-darker mb-4 text-lg">🌱 Available Soil Types in This Area</h4>
+                        <div class="space-y-4">
+                            <div class="info-card hover:scale-105 transition-transform duration-300">
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-3xl">🌿</span>
+                                    <div>
+                                        <p class="font-bold text-xl" style="color: #1a365d;">Kumayili Series</p>
+                                        <p class="text-sm text-dark">Eutric Arenosol (Orchric) - 3 locations</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="info-card hover:scale-105 transition-transform duration-300">
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-3xl">🌾</span>
+                                    <div>
+                                        <p class="font-bold text-xl" style="color: #2d5a2d;">Beraku Series</p>
+                                        <p class="text-sm text-dark">Eutric Arenosol (Rubic) - 5 locations</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div class="flex items-center justify-center space-x-3">
+                                <span class="text-2xl">📊</span>
+                                <p class="text-gray-700 font-semibold text-center">
+                                    <strong>Coverage:</strong> 8 soil sample points across the region
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Analysis Results -->
+            <div class="space-y-10 animate-slide-right">
+                <!-- Soil Fertility Analysis -->
+                <div class="container-card enhanced-padding">
+                    <h2 class="section-title">📊 Soil Fertility Analysis</h2>
+                    <div id="fertilityAnalysis" class="space-y-6">
+                        <div class="info-card text-center">
+                            <div class="flex flex-col items-center space-y-4">
+                                <span class="text-6xl animate-pulse">📊</span>
+                                <p class="text-dark text-lg font-medium">Click "Get My Location" to see automatic soil fertility analysis for your area</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let currentMarker;
+        let currentLocation = null;
+        let ndviHeatLayer = null;
+        let demHeatLayer = null;
+
+        // Initialize map
+        function initMap() {
+            // Initialize at zoom 9 so NDVI (maxZoom 9) is visible immediately
+            map = L.map('map').setView([7.37, -2.35], 9); // Center on the dataset area
+
+            // Base layers
+            const baseOsm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            });
+            const baseImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Imagery &copy; Esri'
+            });
+
+            // Overlays: NDVI (NASA GIBS) and DEM/Terrain (OpenTopoMap)
+            // Note: NDVI uses a recent default date. You can update the date string as needed.
+            // NDVI (GIBS) goes up to zoom level 9 with GoogleMapsCompatible_Level9
+            const ndviDate = '2023-07-01';
+            const ndvi = L.tileLayer('https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_NDVI_16Day/default/' + ndviDate + '/GoogleMapsCompatible_Level9/{z}/{y}/{x}.png', {
+                attribution: 'NDVI &copy; NASA GIBS',
+                maxZoom: 9,
+                opacity: 0.6
+            });
+
+            const dem = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: 'Map data: &copy; OpenStreetMap, SRTM | Map style: &copy; OpenTopoMap',
+                maxZoom: 17,
+                opacity: 0.7
+            });
+
+            // Add default base layer
+            baseImagery.addTo(map);
+
+            // Layer control
+            const baseLayers = {
+                'Imagery (Esri)': baseImagery,
+                'OpenStreetMap': baseOsm
+            };
+            const overlays = {
+                'NDVI (NASA GIBS)': ndvi,
+                'DEM/Terrain (OpenTopoMap)': dem
+            };
+            L.control.layers(baseLayers, overlays, { position: 'topright', collapsed: false }).addTo(map);
+
+            // If user turns on NDVI and current zoom is above 9, auto-zoom down so tiles load
+            map.on('overlayadd', function (e) {
+                if (e.layer === ndvi && map.getZoom() > 9) {
+                    map.setZoom(9);
+                }
+                if (e.layer === ndvi) {
+                    fetchNdviHeat();
+                }
+            });
+
+            // Preload DEM heat once
+            fetchDemHeat();
+
+            // Load soil data points from backend to enrich the map
+            fetch('/api/soil-points')
+                .then(r => r.json())
+                .then(data => {
+                    (data.points || []).forEach(point => addPointMarker({
+                        lat: point.lat,
+                        lng: point.lng,
+                        name: point.name || 'Soil Sample',
+                        classification: point.classification || ''
+                    }));
+                })
+                .catch(err => console.error('Failed loading soil points', err));
+
+            // Also load predicted SFI for all samples and display styled markers
+            fetch('/api/soil-predictions')
+                .then(r => r.json())
+                .then(data => {
+                    (data.points || []).forEach(p => {
+                        addPointMarker({ lat: p.lat, lng: p.lng, name: p.series || 'Soil Sample', classification: p.classification || '' }, p);
+                    });
+                })
+                .catch(err => console.error('Failed loading soil predictions', err));
+        }
+
+        function addPointMarker(point, pred = null) {
+            // Use a single neutral icon for all dataset points (no colors)
+            let emoji = '🌱';
+            const marker = L.marker([point.lat, point.lng], {
+                icon: L.divIcon({ className: 'custom-marker', html: emoji, iconSize: [20, 20] })
+            }).addTo(map);
+
+            const recHtml = pred && pred.recommendations && pred.recommendations.length
+                ? `<ul class="list-disc list-inside text-xs mt-2">${pred.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>`
+                : '';
+            const sfiHtml = pred ? `<div class="text-xs mt-1"><strong>SFI:</strong> ${pred.sfi.toFixed(2)} | <strong>Category:</strong> ${pred.category}</div>` : '';
+            marker.bindPopup(`<b>${point.name || 'Soil Sample'}</b><br><small>${point.classification || ''}</small>${sfiHtml}${recHtml}<br><br><button onclick="getSoilInfoByClick(${point.lat}, ${point.lng}, '${(point.name||'Soil Sample').replace(/'/g, "\'")}', '${(point.classification||'').replace(/'/g, "\'")}')" class="bg-blue-500 text-white px-2 py-1 rounded text-xs">Analyze Soil</button>`);
+
+            marker.on('click', function () {
+                getSoilInfoByClick(point.lat, point.lng, point.name || 'Soil Sample', point.classification || '');
+            });
+        }
+
+        function toHeat(points) {
+            return points.map(p => [p.lat, p.lon, Math.min(1, Math.max(0, p.value))]);
+        }
+
+        async function fetchNdviHeat() {
+            try {
+                const res = await fetch('/api/ndvi-points');
+                const data = await res.json();
+                if (data.points && data.points.length) {
+                    const heatData = toHeat(data.points);
+                    if (ndviHeatLayer) {
+                        map.removeLayer(ndviHeatLayer);
+                    }
+                    ndviHeatLayer = L.heatLayer(heatData, { radius: 20, blur: 25, maxZoom: 12, minOpacity: 0.3 });
+                    ndviHeatLayer.addTo(map);
+                }
+            } catch (err) {
+                console.error('Failed to load NDVI heat points', err);
+            }
+        }
+
+        async function fetchDemHeat() {
+            try {
+                const res = await fetch('/api/dem-points');
+                const data = await res.json();
+                if (data.points && data.points.length) {
+                    const heatData = toHeat(data.points);
+                    if (demHeatLayer) {
+                        map.removeLayer(demHeatLayer);
+                    }
+                    demHeatLayer = L.heatLayer(heatData, { radius: 18, blur: 22, maxZoom: 12, minOpacity: 0.3, gradient: { 0.2: '#e0f2fe', 0.5: '#93c5fd', 0.8: '#1d4ed8' } });
+                    demHeatLayer.addTo(map);
+                }
+            } catch (err) {
+                console.error('Failed to load DEM heat points', err);
+            }
+        }
+
+        // Reset location state
+        function resetLocationState() {
+            document.getElementById('getLocationBtn').style.display = 'block';
+            document.getElementById('refreshLocationBtn').style.display = 'none';
+            document.getElementById('resetLocationBtn').style.display = 'none';
+            document.getElementById('currentLocation').textContent = 'Not set';
+            document.getElementById('coordinates').textContent = 'Not set';
+
+            // Clear soil info and analysis
+            document.getElementById('soilInfo').innerHTML = '<div class="info-card text-center"><div class="flex flex-col items-center space-y-4"><span class="text-6xl animate-bounce">🌱</span><p class="text-dark text-lg font-medium">Click "Get My Location" to see soil information for your area</p></div></div>';
+            document.getElementById('fertilityAnalysis').innerHTML = '<div class="info-card text-center"><div class="flex flex-col items-center space-y-4"><span class="text-6xl animate-pulse">📊</span><p class="text-dark text-lg font-medium">Click "Get My Location" to see automatic soil fertility analysis for your area</p></div></div>';
+
+            // Remove user marker from map
+            if (currentMarker) {
+                map.removeLayer(currentMarker);
+                currentMarker = null;
+            }
+
+            // Remove clicked marker from map
+            if (window.clickedMarker) {
+                map.removeLayer(window.clickedMarker);
+                window.clickedMarker = null;
+            }
+
+            // Reset to default view
+            map.setView([7.37, -2.35], 12);
+
+            // Reset current location
+            currentLocation = null;
+        }
+
+        // Get user location with high accuracy
+        function getCurrentLocation() {
+            if (navigator.geolocation) {
+                // Request high accuracy location
+                const options = {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const accuracy = position.coords.accuracy;
+
+                        currentLocation = { lat, lng, accuracy };
+
+                        // Update map with user location
+                        map.setView([lat, lng], 15);
+
+                        // Remove previous marker
+                        if (currentMarker) {
+                            map.removeLayer(currentMarker);
+                        }
+
+                        // Add new marker for user location
+                        currentMarker = L.marker([lat, lng], {
+                            icon: L.divIcon({
+                                className: 'user-location-marker',
+                                html: '📍',
+                                iconSize: [25, 25]
+                            })
+                        })
+                            .addTo(map)
+                            .bindPopup(`<b>Your Location</b><br>Accuracy: ±${Math.round(accuracy)}m`)
+                            .openPopup();
+
+                        // Update UI with location info
+                        document.getElementById('currentLocation').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        document.getElementById('coordinates').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)} (Accuracy: ±${Math.round(accuracy)}m)`;
+
+                        // Show refresh and reset buttons, hide get location button
+                        document.getElementById('getLocationBtn').style.display = 'none';
+                        document.getElementById('refreshLocationBtn').style.display = 'block';
+                        document.getElementById('resetLocationBtn').style.display = 'block';
+
+                        // Get soil information for this location
+                        getLocationSoilInfo(lat, lng);
+                    },
+                    error => {
+                        console.error('Error getting location:', error);
+                        let errorMessage = 'Unable to get your location. ';
+                        switch (error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Please allow location access in your browser settings.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'Location request timed out. Please try again.';
+                                break;
+                            default:
+                                errorMessage += 'An unknown error occurred.';
+                        }
+                        alert(errorMessage);
+                    },
+                    options
+                );
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        // Get soil information for a location
+        async function getLocationSoilInfo(lat, lng) {
+            try {
+                const response = await fetch('/api/location-info', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ latitude: lat, longitude: lng })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Display comprehensive soil information with immediate recommendations
+                const soilInfoDiv = document.getElementById('soilInfo');
+                soilInfoDiv.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="info-card" style="border-left: 4px solid #3b82f6;">
+                            <h4 class="font-semibold text-darker mb-3">📍 Location Information</h4>
+                            <p class="mb-2"><strong class="text-darker">Your Location:</strong> <span style="color: #1e40af; font-weight: bold;">${lat.toFixed(6)}, ${lng.toFixed(6)}</span></p>
+                            <p class="mb-2"><strong class="text-darker">Nearest Sample:</strong> <span style="color: #dc2626; font-weight: bold;">${data.distance_km || 'Unknown'} km away</span></p>
+                            <p><strong class="text-darker">Data Source:</strong> <span style="color: #059669; font-weight: bold;">${data.soil_series || 'Unknown'} soil series</span></p>
+                        </div>
+                        
+                        <div class="info-card" style="border-left: 4px solid #10b981;">
+                            <h4 class="font-semibold text-darker mb-3">🏞️ Soil Classification</h4>
+                            <p class="mb-2"><strong class="text-darker">Soil Series:</strong> <span style="color: #059669; font-weight: bold;">${data.soil_series || 'Unknown'}</span></p>
+                            <p class="mb-2"><strong class="text-darker">Classification:</strong> <span class="text-darker">${data.soil_classification || 'Unknown'}</span></p>
+                            <p><strong class="text-darker">Texture:</strong> <span class="text-darker">${data.texture || 'Unknown'}</span></p>
+                        </div>
+                        
+                        <div class="info-card" style="border-left: 4px solid #f59e0b;">
+                            <h4 class="font-semibold text-darker mb-3">🔬 Soil Properties</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">pH:</strong> <span style="color: #dc2626; font-weight: bold;">${data.ph || 'Unknown'}</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Organic Carbon:</strong> <span style="color: #059669; font-weight: bold;">${data.organic_carbon || 'Unknown'}%</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Organic Matter:</strong> <span style="color: #059669; font-weight: bold;">${data.organic_matter || 'Unknown'}%</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Nitrogen:</strong> <span style="color: #1e40af; font-weight: bold;">${data.nitrogen || 'Unknown'}%</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Phosphorus:</strong> <span style="color: #dc2626; font-weight: bold;">${data.phosphorus || 'Unknown'} mg/kg</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Potassium:</strong> <span style="color: #1e40af; font-weight: bold;">${data.potassium || 'Unknown'} cmol/kg</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Calcium:</strong> <span style="color: #059669; font-weight: bold;">${data.calcium || 'Unknown'} cmol/kg</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200">
+                                    <p><strong class="text-darker">Magnesium:</strong> <span style="color: #dc2626; font-weight: bold;">${data.magnesium || 'Unknown'} cmol/kg</span></p>
+                                </div>
+                                <div class="p-2 bg-gray-50 rounded-lg border border-gray-200 sm:col-span-2">
+                                    <p><strong class="text-darker">ECEC:</strong> <span style="color: #1e40af; font-weight: bold;">${data.ecec || 'Unknown'} cmol/kg</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Display detailed fertility analysis if available
+                if (data.analysis_available && data.fertility_analysis) {
+                    displayFertilityAnalysis(data.fertility_analysis, data.distance_km, data);
+                } else if (data.distance_km > 100) {
+                    displayFertilityAnalysis(null, data.distance_km, true);
+                }
+
+            } catch (error) {
+                console.error('Error getting soil info:', error);
+                document.getElementById('soilInfo').innerHTML = '<div class="info-card text-center" style="background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(255, 107, 107, 0.05) 100%); border-left: 4px solid #ff6b6b;"><div class="flex flex-col items-center space-y-4"><span class="text-6xl animate-bounce">⚠️</span><p class="text-red-700 text-lg font-medium" style="text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);">Error getting soil information. Please try again.</p></div></div>';
+            }
+        }
+
+        // Get soil information by clicking on map points
+        async function getSoilInfoByClick(lat, lng, soilSeries, soilClassification) {
+            try {
+                // Update map view to focus on clicked location
+                map.setView([lat, lng], 15);
+
+                // Add a temporary marker for the clicked location
+                if (window.clickedMarker) {
+                    map.removeLayer(window.clickedMarker);
+                }
+
+                window.clickedMarker = L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'clicked-marker',
+                        html: '🎯',
+                        iconSize: [30, 30]
+                    })
+                })
+                    .addTo(map)
+                    .bindPopup(`<b>Analyzing: ${soilSeries}</b><br><small>${soilClassification}</small>`)
+                    .openPopup();
+
+                // Update UI to show we're analyzing this location
+                document.getElementById('currentLocation').textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                document.getElementById('coordinates').textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)} (Clicked Location)`;
+
+                // Show refresh and reset buttons
+                document.getElementById('getLocationBtn').style.display = 'none';
+                document.getElementById('refreshLocationBtn').style.display = 'block';
+                document.getElementById('resetLocationBtn').style.display = 'block';
+
+                // Get soil information for this clicked location
+                getLocationSoilInfo(lat, lng);
+
+            } catch (error) {
+                console.error('Error analyzing clicked location:', error);
+                alert('Error analyzing soil at this location. Please try again.');
+            }
+        }
+
+        // Generate SFI-based recommendations
+        function generateSFIRecommendations(sfiScore, soilData) {
+            const recommendations = [];
+
+            // Base recommendations on SFI score
+            if (sfiScore >= 80) {
+                recommendations.push("🟢 Excellent soil fertility - maintain current practices");
+                recommendations.push("Continue sustainable farming methods and crop rotation");
+                recommendations.push("Monitor soil health annually with regular testing");
+                recommendations.push("Maintain organic matter levels through composting");
+                recommendations.push("Practice conservation tillage to preserve soil structure");
+            } else if (sfiScore >= 60) {
+                recommendations.push("🔵 Good soil fertility - focus on maintenance and improvement");
+                recommendations.push("Increase organic matter by 0.5-1% over 2-3 years");
+                recommendations.push("Implement crop rotation with 25% legumes");
+                recommendations.push("Use cover crops during fallow periods");
+                recommendations.push("Practice conservation tillage");
+                recommendations.push("Test soil every 2 years to monitor improvements");
+            } else if (sfiScore >= 40) {
+                recommendations.push("🟠 Average soil fertility - implement improvement program");
+                recommendations.push("Increase organic matter through composting (5-8 tons/acre annually)");
+                recommendations.push("Apply balanced fertilizers based on soil test results");
+                recommendations.push("Implement crop rotation with 30% legumes");
+                recommendations.push("Use green manure crops (clover, vetch)");
+                recommendations.push("Consider soil amendments for pH correction");
+                recommendations.push("Test soil annually to track improvements");
+            } else {
+                recommendations.push("🔴 Below average fertility - comprehensive improvement needed");
+                recommendations.push("Implement intensive organic matter addition (8-12 tons/acre)");
+                recommendations.push("Apply balanced fertilizers with higher rates");
+                recommendations.push("Use crop rotation with 40% legumes (soybeans, alfalfa)");
+                recommendations.push("Implement no-till or reduced-till practices");
+                recommendations.push("Consider soil amendments and pH correction");
+                recommendations.push("Establish permanent vegetative cover where possible");
+                recommendations.push("Test soil every 6 months during improvement phase");
+            }
+
+            // Add soil type specific recommendations
+            if (soilData?.soil_series === 'Kumayili Series') {
+                recommendations.push("🌱 Kumayili Series specific: Focus on improving water retention");
+                recommendations.push("Consider adding clay amendments for better structure");
+                recommendations.push("Implement contour farming for erosion control");
+            } else if (soilData?.soil_series === 'Beraku Series') {
+                recommendations.push("🌱 Beraku Series specific: Monitor drainage and aeration");
+                recommendations.push("Consider raised beds for better root development");
+                recommendations.push("Implement crop rotation to prevent compaction");
+            }
+
+            // Add general best practices
+            recommendations.push("💧 Maintain proper irrigation practices");
+            recommendations.push("🌾 Use integrated pest management");
+            recommendations.push("📊 Regular soil testing and monitoring");
+            recommendations.push("🌿 Consider precision agriculture technologies");
+
+            return recommendations;
+        }
+
+        // Display fertility analysis
+        function displayFertilityAnalysis(fertilityData, distanceKm, soilData = null, outOfRange = false) {
+            const analysisDiv = document.getElementById('fertilityAnalysis');
+
+            if (outOfRange) {
+                analysisDiv.innerHTML = `
+                     <div class="info-card text-center" style="border-left: 4px solid #f59e0b;">
+                         <h3 class="text-xl font-semibold text-darker mb-3">⚠️ Location Out of Range</h3>
+                         <p class="text-dark mb-3">
+                             Your location is <span style="color: #dc2626; font-weight: bold;">${distanceKm} km</span> from the nearest soil sample. 
+                             For accurate analysis, we need samples within 100 km.
+                         </p>
+                         <p class="text-dark text-sm">
+                             Consider getting a soil test done in your area or contact local agricultural extension services.
+                         </p>
+                     </div>
+                 `;
+                return;
+            }
+
+            if (!fertilityData) {
+                analysisDiv.innerHTML = '<div class="info-card text-center"><div class="flex flex-col items-center space-y-4"><span class="text-6xl animate-pulse">📊</span><p class="text-dark text-lg font-medium">Click "Get My Location" to see automatic soil fertility analysis for your area</p></div></div>';
+                return;
+            }
+
+            const categoryClass = `fertility-${fertilityData.category.toLowerCase().replace(' ', '-')}`;
+            const sfiScore = fertilityData.sfi_score;
+
+            // Generate SFI-based recommendations
+            const sfiRecommendations = generateSFIRecommendations(sfiScore, soilData);
+
+            analysisDiv.innerHTML = `
+                 <div class="space-y-6">
+                     <div class="text-center p-6 rounded-2xl ${categoryClass} text-white shadow-lg">
+                         <h3 class="text-2xl font-bold mb-2">${fertilityData.category}</h3>
+                         <p class="text-xl mb-2">Soil Fertility Index: <span class="font-bold">${sfiScore.toFixed(2)}</span></p>
+                         <p class="text-sm opacity-90">Based on ${soilData?.soil_series || 'soil sample'} ${distanceKm} km away</p>
+                     </div>
+                     
+                     <div class="info-card">
+                         <h4 class="font-semibold text-darker mb-4">📈 Analysis Details</h4>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                             <div class="p-3 bg-white rounded-lg border border-gray-100">
+                                 <p class="text-sm"><strong class="text-darker">SFI Score:</strong> <span style="color: #1a365d; font-weight: bold;">${sfiScore.toFixed(2)}</span></p>
+                             </div>
+                             <div class="p-3 bg-white rounded-lg border border-gray-100">
+                                 <p class="text-sm"><strong class="text-darker">Category:</strong> <span style="color: #2d5a2d; font-weight: bold;">${fertilityData.category}</span></p>
+                             </div>
+                             <div class="p-3 bg-white rounded-lg border border-gray-100">
+                                 <p class="text-sm"><strong class="text-darker">Soil Type:</strong> <span style="color: #cc6600; font-weight: bold;">${soilData?.soil_series || 'Unknown'}</span></p>
+                             </div>
+                             <div class="p-3 bg-white rounded-lg border border-gray-100">
+                                 <p class="text-sm"><strong class="text-darker">Data Source:</strong> <span style="color: #1a365d; font-weight: bold;">${distanceKm} km away</span></p>
+                             </div>
+                         </div>
+                     </div>
+                     
+                     <div class="info-card">
+                         <h4 class="font-semibold text-darker mb-4">💡 SFI-Based Recommendations</h4>
+                         <div class="bg-white border border-gray-200 rounded-xl p-6 max-h-96 overflow-y-auto shadow-inner">
+                             <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                 <p class="text-sm text-blue-800 font-medium">
+                                     <strong>Recommendations based on:</strong> SFI Score ${sfiScore.toFixed(1)} (${fertilityData.category}), 
+                                     ${soilData?.soil_series || 'Unknown'} soil type, and specific soil properties
+                                 </p>
+                             </div>
+                             <div class="space-y-3">
+                                 ${sfiRecommendations.map(rec => `
+                                     <div class="p-3 bg-gray-50 rounded-lg border-l-4 border-orange-400">
+                                         <p class="text-sm text-dark">${rec}</p>
+                                     </div>
+                                 `).join('')}
+                             </div>
+                         </div>
+                     </div>
+                     
+                     <div class="info-card" style="border-left: 4px solid #3b82f6;">
+                         <p class="text-sm text-dark">
+                             <strong class="text-darker">Note:</strong> These recommendations are specifically tailored to your SFI score 
+                             (<span style="color: #1e40af; font-weight: bold;">${sfiScore.toFixed(1)}</span>) and soil type 
+                             (<span style="color: #059669; font-weight: bold;">${soilData?.soil_series || 'Unknown'}</span>). 
+                             For the most accurate results, consider getting a soil test done in your specific location.
+                         </p>
+                     </div>
+                 </div>
+             `;
+        }
+
+        // Event listeners
+        document.addEventListener('DOMContentLoaded', function () {
+            initMap();
+
+            document.getElementById('getLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('refreshLocationBtn').addEventListener('click', getCurrentLocation);
+            document.getElementById('resetLocationBtn').addEventListener('click', resetLocationState);
+
+            const retrainBtn = document.getElementById('retrainBtn');
+            if (retrainBtn) {
+                retrainBtn.addEventListener('click', async function () {
+                    const statusEl = document.getElementById('trainStatus');
+                    const panel = document.getElementById('metricsPanel');
+                    const content = document.getElementById('metricsContent');
+                    statusEl.textContent = 'Training...';
+                    panel.style.display = 'none';
+                    try {
+                        const res = await fetch('/api/train', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                        const data = await res.json();
+                        if (!data.ok) throw new Error(data.error || 'Training failed');
+                        statusEl.textContent = 'Training complete';
+                        if (data.metrics) {
+                            const m = data.metrics;
+                            const cls = m.classification || {};
+                            content.innerHTML = `
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <p><strong>MSE:</strong> ${m.mse?.toFixed ? m.mse.toFixed(2) : m.mse}</p>
+                                        <p><strong>RMSE:</strong> ${m.rmse?.toFixed ? m.rmse.toFixed(2) : m.rmse}</p>
+                                        <p><strong>MAE:</strong> ${m.mae?.toFixed ? m.mae.toFixed(2) : m.mae}</p>
+                                        <p><strong>R²:</strong> ${m.r2?.toFixed ? m.r2.toFixed(2) : m.r2}</p>
+                                    </div>
+                                    <div>
+                                        <p><strong>Accuracy (category):</strong> ${cls.accuracy?.toFixed ? cls.accuracy.toFixed(2) : cls.accuracy}</p>
+                                        <p><strong>F1 (macro):</strong> ${cls.f1_macro?.toFixed ? cls.f1_macro.toFixed(2) : cls.f1_macro}</p>
+                                        <p><strong>Precision (macro):</strong> ${cls.precision_macro?.toFixed ? cls.precision_macro.toFixed(2) : cls.precision_macro}</p>
+                                        <p><strong>Recall (macro):</strong> ${cls.recall_macro?.toFixed ? cls.recall_macro.toFixed(2) : cls.recall_macro}</p>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <p class="font-semibold mb-2">Confusion Matrix (rows=true, cols=pred)</p>
+                                    <pre class="text-xs bg-gray-50 border border-gray-200 rounded p-2 overflow-x-auto">${JSON.stringify(cls.confusion_matrix, null, 2)}</pre>
+                                </div>
+                            `;
+                            panel.style.display = 'block';
+                        }
+                    } catch (err) {
+                        statusEl.textContent = 'Training failed';
+                        alert(err.message || 'Training failed');
+                    }
+                });
+            }
+
+        });
+    </script>
+</body>
+
+</html>

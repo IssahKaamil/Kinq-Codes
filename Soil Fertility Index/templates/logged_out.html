@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logged Out - Soil Fertility Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="min-h-screen bg-[#f8fafc] flex items-center justify-center px-4">
+    <div class="w-full max-w-md">
+        <div class="bg-white border border-gray-200 rounded-2xl shadow-sm p-8 text-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">You’ve been logged out</h1>
+            <p class="text-gray-600 text-sm mb-6">Thanks for using Soil Fertility Index. You can log back in anytime.</p>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="space-y-2 mb-4 text-left">
+                {% for category, message in messages %}
+                <div class="text-sm px-3 py-2 rounded border {% if category=='error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-green-50 text-green-700 border-green-200{% endif %}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="flex gap-3">
+                <a href="{{ url_for('login') }}" class="btn-primary flex-1 text-center">Login</a>
+                <a href="{{ url_for('signup') }}" class="btn-secondary flex-1 text-center">Sign Up</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
